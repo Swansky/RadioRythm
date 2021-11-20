@@ -3,11 +3,15 @@ package fr.swansky.radioRythm.settings;
 import fr.swansky.radioRythm.settings.exceptions.TranslationFileNotFoundException;
 import fr.swansky.radioRythm.settings.exceptions.TranslationInvalidPropertiesException;
 import fr.swansky.radioRythm.settings.exceptions.TranslationKeyNotFoundException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.InputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,14 +27,18 @@ public class TranslationManager {
     }
 
     private void loadPropertiesFile() {
-        String path = "/languages/" + language.getTranslationFileName() + ".properties";
-        InputStream resourceAsStream = getClass().getResourceAsStream(path);
-        if (resourceAsStream == null) {
+        String path = "/languages/" + language.getTranslationFileName() + ".language";
+        URL resource = getClass().getResource(path);
+
+        if (resource == null) {
             LOGGER.fatal("", new TranslationFileNotFoundException(language, path));
             return;
         }
+        File propertiesFile = new File(resource.getFile());
+
         try {
-            String s = IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+            String s = FileUtils.readFileToString(propertiesFile,StandardCharsets.UTF_8);
+            System.out.println(s);
             String[] split = s.split("\n");
             for (String line : split) {
                 if (line.isBlank())

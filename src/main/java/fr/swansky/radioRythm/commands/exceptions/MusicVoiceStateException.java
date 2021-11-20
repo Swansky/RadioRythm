@@ -1,7 +1,6 @@
 package fr.swansky.radioRythm.commands.exceptions;
 
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 
 public class MusicVoiceStateException extends Exception {
     /**
@@ -10,6 +9,6 @@ public class MusicVoiceStateException extends Exception {
      * call to {@link #initCause}.
      */
     public MusicVoiceStateException(Member member) {
-        super("No voice state for member: "+member.getId()+" possible because net.dv8tion.jda.api.utils.cache.CacheFlag.VOICE_STATE is disabled");
+        super("No voice state for member: " + member.getId() + " possible because net.dv8tion.jda.api.utils.cache.CacheFlag.VOICE_STATE is disabled");
     }
 }
