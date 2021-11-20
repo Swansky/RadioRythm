@@ -4,9 +4,13 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import fr.swansky.discordCommandIOC.Commands.annotations.Command;
 import fr.swansky.discordCommandIOC.Commands.annotations.CommandsContainer;
+import fr.swansky.radioRythm.RadioRythm;
+import fr.swansky.radioRythm.commands.exceptions.MusicVoiceStateException;
 import fr.swansky.radioRythm.music.AudioHandler;
 import fr.swansky.radioRythm.music.MusicManager;
 import fr.swansky.radioRythm.music.MusicPlayer;
+import fr.swansky.radioRythm.settings.TranslationManager;
+import fr.swansky.radioRythm.settings.exceptions.TranslationKeyNotFoundException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -14,12 +18,27 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.exceptions.PermissionException;
+import org.apache.log4j.Logger;
 
 import java.awt.*;
 
 @CommandsContainer
 public class MusicCommands {
+    private static final Logger LOGGER = Logger.getLogger(RadioRythm.class);
+    private static final int MAX_VOLUME = 100;
+    private static final int MIN_VOLUME = 10;
     private final MusicManager manager = new MusicManager();
+    private final TranslationManager translationManager;
+    private String translationErrorMessage = "Internal error pls contact administrator code type: command.error.translation";
+
+    public MusicCommands() {
+        this.translationManager = RadioRythm.getINSTANCE().getTranslationManager();
+        try {
+            this.translationErrorMessage = translationManager.getTranslationByKey("commands.error.translation");
+        } catch (TranslationKeyNotFoundException e) {
+            LOGGER.fatal("Music commands ", e);
+        }
+    }
 
     private static String getTimestamp(long milliseconds) {
         int seconds = (int) (milliseconds / 1000) % 60;
@@ -32,113 +51,146 @@ public class MusicCommands {
             return String.format("%02d:%02d", minutes, seconds);    //set format
     }
 
-    @Command(name = "play", description = "Play fr.swansky.radioRythm.music with bot ")
+    @Command(name = "play", description = "commands.play.description")
     private void playCommand(Guild guild, TextChannel textChannel, User user, String command, String[] args) {
-        VoiceChannel voiceChannel = guild.getMember(user).getVoiceState().getChannel();
+        String translation = "";
         try {
-            if (args.length == 0)
-                throw new Exception("Vous n'avez pas precisé de lien de musique ou de nom de fichier mp3");
+            translation = translationManager.getTranslationByKey("commands.play.error.permission");
+            if (guild.getMember(user).getVoiceState() == null) {
+                LOGGER.fatal("No voice state for user", new MusicVoiceStateException(guild.getMember(user)));
+                return;
+            }
+            if (guild.getMember(user).getVoiceState().getChannel() == null) {
+                textChannel.sendMessage(translationManager.getTranslationByKey("commands.play.error.voice")).queue();
+            }
+            if (args.length == 0) {
+                textChannel.sendMessage(translationManager.getTranslationByKey("commands.play.error.noArgs")).queue();
+            }
 
-            if (voiceChannel == null) throw new Exception("Vous devez être connecté a un channel vocal");
-
+            VoiceChannel voiceChannel = guild.getMember(user).getVoiceState().getChannel();
             AudioHandler mng = manager.getPlayer(guild).getAudioHandler();
-
             if (!guild.getAudioManager().isConnected()) {
                 guild.getAudioManager().setSendingHandler(mng);
                 guild.getAudioManager().openAudioConnection(voiceChannel);
             }
-
-
             manager.loadTrack(textChannel, command.replaceFirst("play ", ""));
         } catch (PermissionException ex) {
             if (ex.getPermission() == Permission.VOICE_CONNECT) {
-                textChannel.sendMessage("Le bot n'a pas la permission de rejoindre ce channel." + voiceChannel.getName()).queue();
+                textChannel.sendMessage(translation).queue();
             }
-        } catch (Exception ex) {
-            textChannel.sendMessage(ex.getMessage()).queue();
+        } catch (TranslationKeyNotFoundException ex) {
+            textChannel.sendMessage(translationErrorMessage).queue();
+            LOGGER.fatal("Play command", ex);
+        } catch (Exception e) {
+            LOGGER.error("Play command", e);
         }
     }
 
-    @Command(name = "skip", description = "Skip a fr.swansky.radioRythm.music")
+    @Command(name = "skip", description = "commands.skip.description")
     private void skip(Guild guild, TextChannel textChannel) {
-        if (!guild.getAudioManager().isConnected()) {
-            textChannel.sendMessage("Le player n'as pas de piste en cours.").queue();
-            return;
-        }
-        manager.getPlayer(guild).skipTrack();
-
-
-        textChannel.sendMessage("La lecture est passé à la piste suivante. :track_next: ").queue();
-    }
-
-    @Command(name = "disconnect", description = "disconnect bot fr.swansky.radioRythm.music")
-    private void stop(Guild guild, TextChannel textChannel) {
-        if (guild.getAudioManager().isConnected()) {
-            manager.getPlayer(guild).getAudioPlayer().stopTrack();
-            manager.getPlayer(guild).getListener().getTracks().clear();
-            guild.getAudioManager().closeAudioConnection();
-            textChannel.sendMessage("Le bot a été déconnecté.").queue();
-        } else {
-            textChannel.sendMessage("Le bot n'est pas connecté.").queue();
-        }
-    }
-
-    @Command(name = "volume", description = "Increase or decrease Volume of fr.swansky.radioRythm.music")
-    private void volume(Guild guild, TextChannel textChannel, String[] command) {
-        AudioPlayer player = manager.getPlayer(guild).getAudioPlayer();
-
-        if (command.length == 0) {
-            textChannel.sendMessage("Volume actuelle: **" + player.getVolume() + "**:speaker:").queue();
-        } else {
-            try {
-                int newVolume = Math.max(10, Math.min(100, Integer.parseInt(command[0]))); //reset newVolume
-                int oldVolume = manager.getPlayer(guild).getAudioPlayer().getVolume();
-                manager.getPlayer(guild).getAudioPlayer().setVolume(newVolume);  //set new volume
-                textChannel.sendMessage("Changement du volume de `" + oldVolume + "` a `" + newVolume + "` :speaker:").queue();
-            } catch (NumberFormatException e) {
-                textChannel.sendMessage("`" + command[0] + "` ce n'ai pas une valeur valide. **(10 - 100)**").queue();
+        try {
+            if (!guild.getAudioManager().isConnected()) {
+                textChannel.sendMessage(translationManager.getTranslationByKey("commands.skip.error.noMusic")).queue();
+                return;
             }
+            manager.getPlayer(guild).skipTrack();
+            textChannel.sendMessage(translationManager.getTranslationByKey("commands.skip.nextMusic")).queue();
+        } catch (TranslationKeyNotFoundException e) {
+            textChannel.sendMessage(translationErrorMessage).queue();
+            LOGGER.fatal("Skip command", e);
         }
     }
 
-    @Command(name = "clear", description = "clear all queue")
+    @Command(name = "disconnect", description = "commands.disconnect.description")
+    private void stop(Guild guild, TextChannel textChannel) {
+        try {
+            if (guild.getAudioManager().isConnected()) {
+                manager.getPlayer(guild).getAudioPlayer().stopTrack();
+                manager.getPlayer(guild).getListener().getTracks().clear();
+                guild.getAudioManager().closeAudioConnection();
+                textChannel.sendMessage(translationManager.getTranslationByKey("commands.disconnect.message")).queue();
+            } else {
+                textChannel.sendMessage(translationManager.getTranslationByKey("commands.disconnect.error.alreadyDisconnect")).queue();
+            }
+        } catch (TranslationKeyNotFoundException e) {
+            textChannel.sendMessage(translationErrorMessage).queue();
+            LOGGER.fatal("disconnect command", e);
+        }
+    }
+
+    @Command(name = "volume", description = "commands.volume.description")
+    private void volume(Guild guild, TextChannel textChannel, String[] command) {
+        try {
+            AudioPlayer player = manager.getPlayer(guild).getAudioPlayer();
+
+            if (command.length == 0) {
+                textChannel.sendMessage(String.format(translationManager.getTranslationByKey("commands.volume.actualVolume"), player.getVolume())).queue();
+            } else {
+                try {
+                    int newVolume = Math.max(MIN_VOLUME, Math.min(MAX_VOLUME, Integer.parseInt(command[0])));
+                    int oldVolume = manager.getPlayer(guild).getAudioPlayer().getVolume();
+                    manager.getPlayer(guild).getAudioPlayer().setVolume(newVolume);
+                    textChannel.sendMessage(String.format(translationManager.getTranslationByKey("commands.volume.set"), oldVolume, newVolume)).queue();
+                } catch (NumberFormatException e) {
+                    textChannel.sendMessage(
+                            String.format(
+                                    translationManager.getTranslationByKey("commands.volume.error.invalidValue"),
+                                    command[0], MIN_VOLUME, MAX_VOLUME)
+                    ).queue();
+                }
+            }
+        } catch (TranslationKeyNotFoundException e) {
+            textChannel.sendMessage(translationErrorMessage).queue();
+            LOGGER.fatal("volume command", e);
+        }
+    }
+
+    @Command(name = "clear", description = "commands.clear.description")
     private void clear(TextChannel textChannel) {
-        MusicPlayer player = manager.getPlayer(textChannel.getGuild());
+        try {
+            MusicPlayer player = manager.getPlayer(textChannel.getGuild());
 
-        if (player.getListener().getTracks().isEmpty()) {
-            textChannel.sendMessage("Il n'y a pas de piste dans la liste d'attente.").queue();
-            return;
+            if (player.getListener().getTracks().isEmpty()) {
+                textChannel.sendMessage(translationManager.getTranslationByKey("commands.clear.error.empty")).queue();
+                return;
+            }
+            player.getListener().getTracks().clear();
+            textChannel.sendMessage(translationManager.getTranslationByKey("commands.clear.success")).queue();
+        } catch (TranslationKeyNotFoundException e) {
+            textChannel.sendMessage(translationErrorMessage).queue();
+            LOGGER.fatal("clear command", e);
         }
-        player.getListener().getTracks().clear();
-        textChannel.sendMessage("La liste d'attente à été vidé.").queue();
+
     }
 
-    @Command(name = "np", description = "now playing")
-    private void nowplaying(TextChannel textChannel, Guild guild) {
-        AudioTrack currentTrack = manager.getPlayer(guild).getAudioPlayer().getPlayingTrack();
+    @Command(name = "np", description = "commands.np.description")
+    private void nowPlaying(TextChannel textChannel, Guild guild) {
+        try {
+            AudioTrack currentTrack = manager.getPlayer(guild).getAudioPlayer().getPlayingTrack();
+            if (currentTrack != null) {
+                String guiNow = GuiTime(currentTrack.getDuration(), currentTrack.getPosition());
+                String position = getTimestamp(currentTrack.getPosition());
+                String duration = getTimestamp(currentTrack.getDuration());
+                String nowPlayingTime = String.format("\n` %s / %s `", position, duration);
 
-        if (currentTrack != null) {
-            String guiNow = GuiTime(currentTrack.getDuration(), currentTrack.getPosition());
-            String position = getTimestamp(currentTrack.getPosition());
-            String duration = getTimestamp(currentTrack.getDuration());
-            String nowplayingTime = String.format("\n` %s / %s `", position, duration);
+                EmbedBuilder builder = new EmbedBuilder();
 
-            EmbedBuilder builder = new EmbedBuilder();
-
-            builder.setTitle("**Now Playing**");
-            builder.setColor(Color.BLUE);
-            if (!currentTrack.getIdentifier().endsWith(".mp3")) {
+                builder.setTitle(translationManager.getTranslationByKey("commands.np.title"));
+                builder.setColor(Color.GREEN);
                 String uri = thumbnailYoutube(currentTrack.getInfo().uri);
                 builder.setThumbnail(uri);
-                builder.addField("**Musique: **", "[" + currentTrack.getInfo().title + "](" + currentTrack.getInfo().uri + ")", true);
-            } else {
-                builder.addField("**Musique: **", "[" + currentTrack.getIdentifier().replace("music/", "") + "](" + currentTrack.getInfo().uri + ")", true);
-            }
-            builder.addField("**Temps: **", "now time: `" + guiNow + "`" + nowplayingTime, true);
+                builder.addField(translationManager.getTranslationByKey("commands.np.music.title"), "[" + currentTrack.getInfo().title + "](" + currentTrack.getInfo().uri + ")", true);
+                builder.addField(translationManager.getTranslationByKey("commands.np.time.title"), "`" + guiNow + "`" + nowPlayingTime, true);
 
-            textChannel.sendMessageEmbeds(builder.build()).queue();
-        } else
-            textChannel.sendMessage("**Aucune musique est en lecture!**  ").queue();
+                textChannel.sendMessageEmbeds(builder.build()).queue();
+            } else
+                textChannel.sendMessage(translationManager.getTranslationByKey("commands.np.error.noMusic")).queue();
+        } catch (TranslationKeyNotFoundException e) {
+            textChannel.sendMessage(translationErrorMessage).queue();
+            LOGGER.fatal("nowPlaying command", e);
+        }
+
+
     }
 
     private String thumbnailYoutube(String url) {
@@ -162,8 +214,6 @@ public class MusicCommands {
         }
         return String.valueOf(sb);
     }
-
-
 
 
 }
