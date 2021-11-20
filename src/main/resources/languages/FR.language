@@ -26,6 +26,8 @@ commands.np.title = Music en cour
 commands.np.music.title = Musique:
 commands.np.time.title = Temps:
 commands.np.error.noMusic = **Aucune musique est en lecture!**
+commands.queue.description = Liste des musiques a joué
+commands.queue.title = Liste des musiques a joué
 
 
 

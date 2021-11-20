@@ -11,9 +11,13 @@ import fr.swansky.swansAPI.exception.InstanceCreationException;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import javax.security.auth.login.LoginException;
+import java.util.Collections;
+import java.util.List;
 
 public class RadioRythm {
     private static final Logger LOGGER = Logger.getLogger(RadioRythm.class);
@@ -40,6 +44,11 @@ public class RadioRythm {
 
     public static void main(String[] args) {
         BasicConfigurator.configure();
+        List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
+        loggers.add(LogManager.getRootLogger());
+        for ( Logger logger : loggers ) {
+            logger.setLevel(Level.WARN);
+        }
         if (args.length > 0) {
             if (args[0].equalsIgnoreCase("--setup-settings")) {
                 SettingsManager.createSampleSettings();

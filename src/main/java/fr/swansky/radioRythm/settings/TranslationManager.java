@@ -4,13 +4,10 @@ import fr.swansky.radioRythm.settings.exceptions.TranslationFileNotFoundExceptio
 import fr.swansky.radioRythm.settings.exceptions.TranslationInvalidPropertiesException;
 import fr.swansky.radioRythm.settings.exceptions.TranslationKeyNotFoundException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -37,8 +34,7 @@ public class TranslationManager {
         File propertiesFile = new File(resource.getFile());
 
         try {
-            String s = FileUtils.readFileToString(propertiesFile,StandardCharsets.UTF_8);
-            System.out.println(s);
+            String s = FileUtils.readFileToString(propertiesFile, StandardCharsets.UTF_8);
             String[] split = s.split("\n");
             for (String line : split) {
                 if (line.isBlank())

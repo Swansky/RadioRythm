@@ -2,6 +2,7 @@ package fr.swansky.radioRythm.commands;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import fr.swansky.discordCommandIOC.Commands.annotations.Command;
 import fr.swansky.discordCommandIOC.Commands.annotations.CommandsContainer;
 import fr.swansky.radioRythm.RadioRythm;
@@ -21,6 +22,7 @@ import net.dv8tion.jda.api.exceptions.PermissionException;
 import org.apache.log4j.Logger;
 
 import java.awt.*;
+import java.util.concurrent.BlockingQueue;
 
 @CommandsContainer
 public class MusicCommands {
@@ -193,6 +195,28 @@ public class MusicCommands {
 
     }
 
+    @Command(name = "queue", description = "commands.queue.description")
+    private void queue(TextChannel textChannel, Guild guild) {
+        try {
+            AudioTrack currentTrack = manager.getPlayer(guild).getAudioPlayer().getPlayingTrack();
+            BlockingQueue<AudioTrack> tracks = manager.getPlayer(guild).getListener().getTracks();
+            EmbedBuilder embedBuilder = new EmbedBuilder();
+            embedBuilder.setTitle(translationManager.getTranslationByKey("commands.queue.title"));
+            StringBuilder queue = new StringBuilder();
+            queue.append("**").append(getInformationFromMusic(currentTrack)).append("**").append("\n");
+            for (AudioTrack track : tracks) {
+
+                queue.append(getInformationFromMusic(track)).append("\n");
+            }
+            embedBuilder.addField("", queue.toString(), true);
+            textChannel.sendMessageEmbeds(embedBuilder.build()).queue();
+        } catch (TranslationKeyNotFoundException e) {
+            textChannel.sendMessage(translationErrorMessage).queue();
+            LOGGER.fatal("nowPlaying command", e);
+        }
+    }
+
+
     private String thumbnailYoutube(String url) {
         String[] urlParam = url.split("v="); //split url on setting url
         String[] param = urlParam[1].split("&");
@@ -215,5 +239,12 @@ public class MusicCommands {
         return String.valueOf(sb);
     }
 
+    private String getInformationFromMusic(AudioTrack audioTrack) {
+        AudioTrackInfo info = audioTrack.getInfo();
+        String position = getTimestamp(audioTrack.getPosition());
+        String duration = getTimestamp(audioTrack.getDuration());
+        String nowPlayingTime = String.format("\n` (%s / %s) `", position, duration);
+        return info.title + nowPlayingTime;
+    }
 
 }
