@@ -1,0 +1,33 @@
+commands.error.translation  = Internal error ! Please contact an administrator
+
+commands.help.description = show a list of commands
+commands.help.title = list of commands
+commands.help.explanation = **ALL COMMANDS START WITH TAF '%s' **
+commands.help.message =  The list of commmands have been send to your private message.
+commands.play.description = Play a music with bot
+commands.play.error.voice = You are not connected to a voice channel.
+commands.play.error.noArgs = Please enter url to play
+commands.play.error.permission = The bot doesn't have permission to join the voice chanel
+commands.skip.description = Skip actual music
+commands.skip.error.noMusic = The bot doesn't have music to play
+commands.skip.nextMusic = The music have been skipped :track_next:
+commands.disconnect.description = Disconnect the bot
+commands.disconnect.error.alreadyDisconnect = The is not connected
+commands.disconnect.message = The bot have been disconnected
+commands.volume.description = Change volume of music
+commands.volume.actualVolume = Actual volume is:** %s ** :speaker:
+commands.volume.error.invalidValue = The value %s is not valid, it must be between %s and %s
+commands.volume.set = Volume have been change for %s to %s  :speaker:
+commands.clear.description = Clear all music queue
+commands.clear.error.empty = There are no musics in queue.
+commands.clear.success = The queue have been cleared.
+commands.np.description = Show now playing music
+commands.np.title = Now Playing
+commands.np.music.title = Music:
+commands.np.time.title = Time:
+commands.np.error.noMusic = **No music actually played!**
+commands.queue.description = List of musics that will be played
+commands.queue.title = List of musics that will be played
+
+
+
