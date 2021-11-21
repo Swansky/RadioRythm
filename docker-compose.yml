@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+  radioRythm:
+    container_name: radioRythm
+    build: .
+    restart: always
+    volumes:
+      - ./radioRythm-data:/usr/app/conf

@@ -35,20 +35,22 @@ public class SettingsManager {
         return settings;
     }
 
-    public static void createSampleSettings() {
+    public static boolean createSampleSettings() {
         File settingsFile = new File(SETTINGS_FILE_URL + "Settings.json");
         if (settingsFile.exists()) {
-            LOGGER.fatal("settings file already exist ! ");
-            return;
+            return false;
         }
         Settings settings = new Settings("", "", Language.ENG);
+        settingsFile.getParentFile().mkdirs();
         try {
             FileWriter fileWriter = new FileWriter(settingsFile);
             GSON.toJson(settings, fileWriter);
             fileWriter.close();
             LOGGER.info("Settings file have been created.");
+            return true;
         } catch (IOException e) {
             LOGGER.fatal("", e);
+            return false;
         }
     }
 

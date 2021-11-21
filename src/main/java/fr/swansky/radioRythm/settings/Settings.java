@@ -29,4 +29,11 @@ public class Settings {
     public Language getLanguage() {
         return language;
     }
+
+    public boolean isEmpty() {
+        if (this.tag.isBlank() || this.token.isBlank() || this.language == null) {
+            return true;
+        }
+        return false;
+    }
 }

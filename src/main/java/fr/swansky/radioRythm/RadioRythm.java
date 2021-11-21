@@ -1,6 +1,5 @@
 package fr.swansky.radioRythm;
 
-import fr.swansky.discordCommandIOC.Commands.CommandManager;
 import fr.swansky.discordCommandIOC.config.DiscordCommandIOCConfig;
 import fr.swansky.ioccontainer.SwansIOC;
 import fr.swansky.radioRythm.listeners.CommandListener;
@@ -22,13 +21,17 @@ import java.util.List;
 public class RadioRythm {
     private static final Logger LOGGER = Logger.getLogger(RadioRythm.class);
     private static RadioRythm INSTANCE;
-    private final TranslationManager translationManager;
     private final Settings settings;
+    private TranslationManager translationManager;
 
     public RadioRythm() throws InstanceCreationException, LoginException {
         INSTANCE = this;
 
         this.settings = SettingsManager.loadSettings();
+        if (this.settings.isEmpty()) {
+            LOGGER.warn("Please configurer settings file.");
+            return;
+        }
         this.translationManager = new TranslationManager(settings.getLanguage());
 
         DiscordCommandIOCConfig discordCommandIOCConfig = new DiscordCommandIOCConfig();
@@ -46,15 +49,13 @@ public class RadioRythm {
         BasicConfigurator.configure();
         List<Logger> loggers = Collections.<Logger>list(LogManager.getCurrentLoggers());
         loggers.add(LogManager.getRootLogger());
-        for ( Logger logger : loggers ) {
+        for (Logger logger : loggers) {
             logger.setLevel(Level.WARN);
         }
-        if (args.length > 0) {
-            if (args[0].equalsIgnoreCase("--setup-settings")) {
-                SettingsManager.createSampleSettings();
-                return;
-            }
-        }
+
+        SettingsManager.createSampleSettings();
+
+
         try {
             new RadioRythm();
         } catch (InstanceCreationException | LoginException e) {
