@@ -1,3 +1,7 @@
 # Project exclude paths
 /target/
 /conf/Settings.json
+/conf/
+/.gradle/
+/.idea/
+/build/

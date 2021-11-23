@@ -1,12 +1,18 @@
-FROM maven:3.8.3-openjdk-17 AS build
+FROM gradle:7.3.0-jdk17 AS build
 
+COPY gradle /usr/app/gradle
 COPY src /usr/app/src
-COPY pom.xml /usr/app/
-RUN mvn -f /usr/app/pom.xml clean package
+COPY build.gradle.kts /usr/app/
+COPY settings.gradle.kts /usr/app/
+
+WORKDIR /usr/app/
+
+RUN gradle build
+RUN ls /usr/app/
 
 FROM openjdk:latest
 
 WORKDIR /usr/app/
-COPY --from=build /usr/app/target/radioRythm.jar .
+COPY --from=build /usr/app/build/libs/RadioRythm.jar .
 
-ENTRYPOINT ["java", "-jar", "radioRythm.jar"]
+ENTRYPOINT ["java", "-jar", "RadioRythm.jar"]

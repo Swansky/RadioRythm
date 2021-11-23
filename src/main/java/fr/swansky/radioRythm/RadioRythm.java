@@ -39,7 +39,7 @@ public class RadioRythm {
 
         SwansIOC swansIOC = SwansIOC.InitIOC(RadioRythm.class);
         swansIOC.getConfigExtensionManager().addConfigExtension(discordCommandIOCConfig);
-        swansIOC.createIOC();
+        swansIOC.startIOC();
 
 
         JDA jda = JDABuilder.createDefault(settings.getToken()).addEventListeners(new CommandListener(settings)).build();

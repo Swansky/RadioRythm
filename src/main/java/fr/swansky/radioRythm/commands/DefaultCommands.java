@@ -37,7 +37,7 @@ public class DefaultCommands {
             embedBuilder.addField("", String.format(translationManager.getTranslationByKey("commands.help.explanation"), RadioRythm.getINSTANCE().getSettings().getTag()), false);
             for (SimpleCommand command : DiscordCommandIOC.getCommandManager().getCommands()) {
                 String description = command.getDescription();
-                if (!description.contains(" ") && !description.isEmpty()) {
+                if (!description.equalsIgnoreCase(" ") && !description.isEmpty()) {
                     description = translationManager.getTranslationByKey(command.getDescription());
                 }
                 embedBuilder.addField("**" + command.getName() + "**", "" + description + "", true);
