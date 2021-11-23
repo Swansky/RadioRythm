@@ -1,7 +1,6 @@
 version: '3.7'
 services:
-  radioRythm:
-    container_name: radioRythm
+  radio-rythm:
     build: .
     restart: always
     volumes:

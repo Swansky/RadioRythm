@@ -37,9 +37,9 @@ public class RadioRythm {
         DiscordCommandIOCConfig discordCommandIOCConfig = new DiscordCommandIOCConfig();
         discordCommandIOCConfig.setDisableDefaultHelpCommand(true);
 
-        SwansIOC swansIOC = SwansIOC.CreateIOC(RadioRythm.class);
+        SwansIOC swansIOC = SwansIOC.InitIOC(RadioRythm.class);
         swansIOC.getConfigExtensionManager().addConfigExtension(discordCommandIOCConfig);
-        swansIOC.CreateIOC();
+        swansIOC.createIOC();
 
 
         JDA jda = JDABuilder.createDefault(settings.getToken()).addEventListeners(new CommandListener(settings)).build();

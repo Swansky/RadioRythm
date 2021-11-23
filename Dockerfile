@@ -7,6 +7,6 @@ RUN mvn -f /usr/app/pom.xml clean package
 FROM openjdk:latest
 
 WORKDIR /usr/app/
-COPY --from=build /usr/app/target/springSwansBot.jar .
+COPY --from=build /usr/app/target/radioRythm.jar .
 
-ENTRYPOINT ["java", "-jar", "springSwansBot.jar"]
+ENTRYPOINT ["java", "-jar", "radioRythm.jar"]

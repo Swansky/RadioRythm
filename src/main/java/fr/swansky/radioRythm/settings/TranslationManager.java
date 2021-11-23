@@ -3,12 +3,12 @@ package fr.swansky.radioRythm.settings;
 import fr.swansky.radioRythm.settings.exceptions.TranslationFileNotFoundException;
 import fr.swansky.radioRythm.settings.exceptions.TranslationInvalidPropertiesException;
 import fr.swansky.radioRythm.settings.exceptions.TranslationKeyNotFoundException;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.net.URL;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,16 +25,16 @@ public class TranslationManager {
 
     private void loadPropertiesFile() {
         String path = "/languages/" + language.getTranslationFileName() + ".language";
-        URL resource = getClass().getResource(path);
+        InputStream resourceAsStream = getClass().getResourceAsStream(path);
 
-        if (resource == null) {
+        if (resourceAsStream == null) {
             LOGGER.fatal("", new TranslationFileNotFoundException(language, path));
             return;
         }
-        File propertiesFile = new File(resource.getFile());
+        InputStreamReader reader = new InputStreamReader(resourceAsStream, StandardCharsets.UTF_8);
 
         try {
-            String s = FileUtils.readFileToString(propertiesFile, StandardCharsets.UTF_8);
+            String s = IOUtils.toString(reader);
             String[] split = s.split("\n");
             for (String line : split) {
                 if (line.isBlank())
