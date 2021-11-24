@@ -1,4 +1,5 @@
 # RadioRythm
+![Docker Pulls](https://img.shields.io/docker/pulls/swansky/radiorythm)
 
 A self host music bot!
 
