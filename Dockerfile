@@ -1,6 +1,5 @@
 FROM gradle:7.3.0-jdk17 AS build
 
-COPY gradle /usr/app/gradle
 COPY src /usr/app/src
 COPY build.gradle.kts /usr/app/
 COPY settings.gradle.kts /usr/app/
