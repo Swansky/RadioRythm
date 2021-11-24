@@ -9,7 +9,7 @@ WORKDIR /usr/app/
 RUN gradle build
 RUN ls /usr/app/
 
-FROM openjdk:latest
+FROM openjdk:17.0-jdk
 
 WORKDIR /usr/app/
 COPY --from=build /usr/app/build/libs/RadioRythm.jar .
